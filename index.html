@@ -1,0 +1,1219 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F4F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111513" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Sổ văn bản">
+<meta name="robots" content="noindex, nofollow">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+<title>Sổ Văn Bản</title>
+<style>
+/* Bố cục: sổ đăng ký văn bản — mỗi văn bản là một dòng sổ, dấu "ĐẾN" như con dấu mực tím */
+:root {
+  --paper: #F2F4F0; --sheet: #FFFFFF; --ink: #19221F; --muted: #5C6964; --line: #D9DFD9;
+  --den: #4A43A6; --den-bg: #ECEBFA; --nb: #36663F; --nb-bg: #E6F0E7;
+  --btn: #19221F; --btn-fg: #F2F4F0; --danger: #B0261C; --danger-bg: #FBEAE8; --warn-bg: #FFF5DA; --warn: #7A5A00;
+  --shadow: 0 1px 0 rgba(25,34,31,.06), 0 6px 18px -10px rgba(25,34,31,.25);
+  --f-ui: "Be Vietnam Pro", -apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --r: 12px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --paper: #111513; --sheet: #1A201D; --ink: #E5EAE6; --muted: #97A39E; --line: #2B3431;
+  --den: #ABA5F6; --den-bg: #25233F; --nb: #8DC79A; --nb-bg: #1D2D21;
+  --btn: #E5EAE6; --btn-fg: #111513; --danger: #FF8A80; --danger-bg: #3A1F1C; --warn-bg: #352C12; --warn: #F0CF6E;
+  --shadow: 0 1px 0 rgba(0,0,0,.4), 0 8px 20px -12px rgba(0,0,0,.7); color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --paper: #111513; --sheet: #1A201D; --ink: #E5EAE6; --muted: #97A39E; --line: #2B3431;
+  --den: #ABA5F6; --den-bg: #25233F; --nb: #8DC79A; --nb-bg: #1D2D21;
+  --btn: #E5EAE6; --btn-fg: #111513; --danger: #FF8A80; --danger-bg: #3A1F1C; --warn-bg: #352C12; --warn: #F0CF6E;
+  --shadow: 0 1px 0 rgba(0,0,0,.4), 0 8px 20px -12px rgba(0,0,0,.7); color-scheme: dark; }
+
+[hidden] { display: none !important; }
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { background: var(--paper); }
+body { margin: 0; color: var(--ink); font: 15px/1.5 var(--f-ui); -webkit-text-size-adjust: 100%; }
+img { max-width: 100%; display: block; }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--den); outline-offset: 2px; }
+.mono { font-family: var(--f-mono); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+
+/* Khung */
+#app { max-width: 720px; margin: 0 auto; padding: 0 16px calc(96px + env(safe-area-inset-bottom, 0px)); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--paper);
+  margin: 0 -16px; padding: 10px 16px; display: flex; align-items: center; gap: 8px; min-height: 56px;
+  border-bottom: 1px solid transparent; }
+.top.scrolled { border-bottom-color: var(--line); }
+.top h1 { font-size: 20px; line-height: 1.25; margin: 0; font-weight: 700; flex: 1; min-width: 0;
+  text-wrap: balance; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.top .brand { display: flex; align-items: baseline; gap: 8px; }
+.top .brand small { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.icon-btn { width: 40px; height: 40px; border-radius: 10px; border: 0; background: transparent; display: grid; place-items: center; flex: none; }
+.icon-btn:active { background: var(--line); }
+.icon-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.txt-btn { border: 0; background: transparent; color: var(--den); font-weight: 600; padding: 8px 6px; flex: none; }
+
+/* Thanh dưới */
+.nav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--sheet); border-top: 1px solid var(--line);
+  padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: 1fr 1fr 72px 1fr 1fr; align-items: center; }
+.nav button { border: 0; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 6px 0;
+  font-size: 11px; font-weight: 500; color: var(--muted); }
+.nav button svg { width: 24px; height: 24px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.nav button.on { color: var(--ink); }
+.nav .plus { width: 54px; height: 54px; margin: -22px auto 0; border-radius: 18px; background: var(--btn); color: var(--btn-fg); box-shadow: var(--shadow); justify-content: center; }
+.nav .plus svg { width: 28px; height: 28px; stroke-width: 2.2; }
+
+/* Thành phần chung */
+.search { position: relative; margin: 4px 0 12px; }
+.search input { width: 100%; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--sheet); padding: 0 14px 0 40px; font-size: 16px; }
+.search svg { position: absolute; left: 12px; top: 12px; width: 20px; height: 20px; stroke: var(--muted); fill: none; stroke-width: 2; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin: 0 0 12px; }
+.chip { border: 1px solid var(--line); background: var(--sheet); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 500; color: var(--muted); }
+.chip.on { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+.chip .n { font-family: var(--f-mono); font-size: 12px; opacity: .75; margin-left: 4px; }
+.sec-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 20px 0 8px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; padding: 0 18px; border-radius: 12px;
+  border: 1px solid var(--line); background: var(--sheet); font-weight: 600; font-size: 15px; white-space: nowrap; }
+.btn.primary { background: var(--btn); color: var(--btn-fg); border-color: var(--btn); }
+.btn.danger { color: var(--danger); border-color: var(--danger); background: var(--danger-bg); }
+.btn.block { width: 100%; }
+.btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.btn:disabled { opacity: .5; }
+.row-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.row-btns .btn { flex: 1 1 140px; }
+.note { font-size: 13px; color: var(--muted); }
+.banner { border-radius: var(--r); padding: 12px 14px; font-size: 14px; margin: 0 0 12px; display: flex; gap: 10px; align-items: flex-start; }
+.banner.warn { background: var(--warn-bg); color: var(--warn); }
+.banner.info { background: var(--den-bg); color: var(--den); }
+.banner b { font-weight: 600; }
+.banner .btn { min-height: 34px; padding: 0 12px; font-size: 13px; margin-left: auto; flex: none; }
+
+/* Dấu loại văn bản */
+.stamp { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; line-height: 1;
+  padding: 4px 6px 3px; border: 1.5px solid currentColor; border-radius: 3px; flex: none; }
+.stamp.den { color: var(--den); transform: rotate(-3deg); }
+.stamp.nb { color: var(--nb); }
+.stamp.mau { color: var(--warn); border-style: dashed; }
+
+/* Danh sách vụ án */
+.cases { display: grid; gap: 10px; }
+.case { text-align: left; width: 100%; border: 1px solid var(--line); background: var(--sheet); border-radius: var(--r); padding: 14px; display: grid; gap: 6px; }
+.case:active { transform: scale(.995); }
+.case h3 { margin: 0; font-size: 16px; font-weight: 600; line-height: 1.35; text-wrap: balance; }
+.case .bh { font-size: 14px; color: var(--ink); }
+.case .bh span { color: var(--muted); }
+.case .meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; color: var(--muted); align-items: center; }
+.case .meta .mono { font-size: 12px; }
+.case.loose { border-style: dashed; background: transparent; }
+.case .closed { font-size: 11px; font-weight: 600; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; }
+
+/* Dòng sổ văn bản */
+.reg { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); overflow: hidden; }
+.doc { width: 100%; text-align: left; border: 0; background: transparent; display: grid; grid-template-columns: 1fr auto; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--line); }
+.doc:first-child { border-top: 0; }
+.doc:active { background: var(--paper); }
+.doc .main { min-width: 0; display: grid; gap: 4px; }
+.doc .l1 { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.doc .so { font-family: var(--f-mono); font-size: 13px; font-weight: 600; }
+.doc .ngay { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.doc .ty { font-size: 15px; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.doc .l3 { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.doc .th { width: 52px; height: 68px; border-radius: 6px; background: var(--paper); border: 1px solid var(--line); overflow: hidden; align-self: start; }
+.doc .th img { width: 100%; height: 100%; object-fit: cover; }
+.month { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); padding: 10px 14px 6px; background: var(--paper); border-top: 1px solid var(--line); }
+.month:first-child { border-top: 0; }
+
+/* Chi tiết vụ án */
+.case-head { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 10px; margin-bottom: 12px; }
+.case-head .lbl { font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.people { display: flex; gap: 6px; flex-wrap: wrap; }
+.person { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 3px 10px; font-size: 14px; }
+.counts { display: flex; gap: 16px; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.counts b { font-family: var(--f-mono); color: var(--ink); font-weight: 600; }
+.toolbar { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; flex-wrap: wrap; }
+.toolbar .chips { margin: 0; }
+.toolbar .sp { flex: 1; }
+
+/* Chi tiết văn bản */
+.pages { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; margin: 4px -16px 12px; padding: 0 16px 6px; }
+.pages button { flex: none; width: 46%; max-width: 240px; aspect-ratio: 3 / 4; border-radius: 10px; border: 1px solid var(--line); background: var(--sheet); overflow: hidden; padding: 0; scroll-snap-align: start; position: relative; }
+.pages img { width: 100%; height: 100%; object-fit: cover; }
+.pages .pn { position: absolute; left: 6px; bottom: 6px; background: rgba(0,0,0,.6); color: #fff; font: 600 11px var(--f-mono); padding: 2px 6px; border-radius: 4px; }
+.fields { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); }
+.fld { display: grid; grid-template-columns: 112px 1fr; gap: 10px; padding: 11px 14px; border-top: 1px solid var(--line); }
+.fld:first-child { border-top: 0; }
+.fld dt { font-size: 13px; color: var(--muted); }
+.fld dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.fld dd.empty { color: var(--muted); }
+.fld a, .linkish { color: var(--den); font-weight: 600; text-decoration: none; background: none; border: 0; padding: 0; text-align: left; }
+details.ocr { margin-top: 12px; background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); }
+details.ocr summary { padding: 12px 14px; font-weight: 600; font-size: 14px; list-style: none; display: flex; justify-content: space-between; }
+details.ocr summary::-webkit-details-marker { display: none; }
+details.ocr pre { margin: 0; padding: 0 14px 14px; white-space: pre-wrap; font: 13px/1.55 var(--f-mono); max-height: 50vh; overflow: auto; color: var(--muted); }
+
+/* Biểu mẫu */
+.form { display: grid; gap: 14px; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; background: var(--sheet); border: 1px solid var(--line); border-radius: 12px; padding: 3px; }
+.seg button { border: 0; border-radius: 9px; background: transparent; padding: 9px 0; font-weight: 600; color: var(--muted); }
+.seg button.on.den { background: var(--den-bg); color: var(--den); }
+.seg button.on.nb { background: var(--nb-bg); color: var(--nb); }
+.f label { display: flex; flex-wrap: wrap; gap: 0 8px; justify-content: space-between; align-items: baseline; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.f label .auto { font-size: 11px; font-weight: 600; color: var(--den); letter-spacing: .04em; }
+.f input, .f select, .f textarea { width: 100%; min-height: 46px; border-radius: 10px; border: 1px solid var(--line); background: var(--sheet); padding: 10px 12px; font-size: 16px; }
+.f textarea { min-height: 84px; resize: vertical; line-height: 1.45; }
+.f input.mono { font-family: var(--f-mono); }
+.f.is-auto input, .f.is-auto textarea { border-color: var(--den); }
+.f .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.two > * { min-width: 0; }
+.shots { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; }
+.shot { position: relative; flex: none; width: 76px; height: 100px; border-radius: 8px; overflow: hidden; border: 1px solid var(--line); background: var(--sheet); }
+.shot img { width: 100%; height: 100%; object-fit: cover; }
+.shot .x { position: absolute; top: 3px; right: 3px; width: 24px; height: 24px; border-radius: 50%; border: 0; background: rgba(0,0,0,.65); color: #fff; font-size: 15px; line-height: 24px; padding: 0; }
+.shot .pn { position: absolute; left: 4px; bottom: 4px; background: rgba(0,0,0,.6); color: #fff; font: 600 10px var(--f-mono); padding: 1px 5px; border-radius: 4px; }
+.add-shot { flex: none; width: 76px; height: 100px; border-radius: 8px; border: 1.5px dashed var(--line); background: transparent; display: grid; place-items: center; color: var(--muted); font-size: 11px; font-weight: 600; text-align: center; padding: 4px; }
+.add-shot svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; display: block; margin: 0 auto 4px; }
+.ocrbox { border-radius: 10px; padding: 10px 12px; font-size: 13px; background: var(--den-bg); color: var(--den); display: grid; gap: 6px; }
+.ocrbox.err { background: var(--danger-bg); color: var(--danger); }
+.ocrbox.ok { background: var(--nb-bg); color: var(--nb); }
+.bar { height: 4px; border-radius: 4px; background: rgba(127,127,127,.25); overflow: hidden; }
+.bar i { display: block; height: 100%; background: currentColor; transition: width .2s; }
+.suggest { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 13px; background: var(--warn-bg); color: var(--warn); border-radius: 10px; padding: 8px 10px; }
+.suggest button { margin-left: auto; border: 1px solid currentColor; background: transparent; color: inherit; border-radius: 8px; padding: 4px 10px; font-weight: 600; font-size: 13px; }
+.pick { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+.pick button { border: 1px solid var(--line); background: var(--sheet); border-radius: 8px; padding: 4px 10px; font-size: 13px; }
+.pick button.on { border-color: var(--den); color: var(--den); background: var(--den-bg); }
+.newcase { border: 1px dashed var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 10px; }
+.err-msg { color: var(--danger); font-size: 13px; font-weight: 600; }
+.savebar { position: sticky; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); background: linear-gradient(transparent, var(--paper) 30%); padding: 18px 0 4px; margin-top: 4px; display: flex; gap: 8px; }
+.savebar .btn { flex: 1; }
+
+/* Dữ liệu */
+.panel { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 10px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+.stat { background: var(--sheet); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; }
+.stat b { display: block; font: 600 24px/1.2 var(--f-mono); }
+.stat span { font-size: 12px; color: var(--muted); }
+ol.steps { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: 14px; }
+
+/* Trống */
+.empty-state { text-align: center; padding: 36px 12px; display: grid; gap: 10px; justify-items: center; }
+.empty-state .ill { width: 92px; height: 112px; border-radius: 8px; background: var(--sheet); border: 1px solid var(--line); position: relative; box-shadow: var(--shadow); }
+.empty-state .ill::before { content: ""; position: absolute; left: 14px; right: 14px; top: 22px; height: 46px;
+  background: repeating-linear-gradient(var(--line) 0 3px, transparent 3px 11px); }
+.empty-state .ill::after { content: "ĐẾN"; position: absolute; right: -10px; bottom: 10px; font: 700 11px var(--f-ui); letter-spacing: .1em; color: var(--den);
+  border: 2px solid var(--den); border-radius: 3px; padding: 3px 6px; transform: rotate(-8deg); background: var(--sheet); }
+.empty-state h2 { font-size: 18px; margin: 6px 0 0; }
+.empty-state p { margin: 0; color: var(--muted); max-width: 34ch; }
+
+/* Lớp phủ */
+.sheet-bg { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+.sheet { width: 100%; max-width: 720px; background: var(--sheet); border-radius: 18px 18px 0 0; padding: 10px 16px calc(16px + env(safe-area-inset-bottom, 0px)); display: grid; gap: 8px; }
+.sheet .grab { width: 40px; height: 4px; border-radius: 4px; background: var(--line); margin: 0 auto 6px; }
+.sheet h3 { margin: 0 0 4px; font-size: 16px; }
+.sheet p { margin: 0 0 6px; color: var(--muted); font-size: 14px; }
+.viewer { position: fixed; inset: 0; z-index: 60; background: #000; display: flex; flex-direction: column; }
+.viewer .vbar { display: flex; align-items: center; gap: 8px; padding: calc(8px + env(safe-area-inset-top, 0px)) 12px 8px; color: #fff; }
+.viewer .vbar span { flex: 1; font: 600 13px var(--f-mono); }
+.viewer .vbar button { border: 1px solid rgba(255,255,255,.35); background: transparent; color: #fff; border-radius: 8px; padding: 6px 12px; font-weight: 600; }
+.viewer .vscroll { flex: 1; overflow: auto; -webkit-overflow-scrolling: touch; }
+.viewer .vscroll img { margin: 0 auto; max-width: none; }
+.toast { position: fixed; left: 50%; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); z-index: 70;
+  background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 10px; font-size: 14px; font-weight: 500; max-width: calc(100% - 32px); box-shadow: var(--shadow); }
+@media (prefers-reduced-motion: no-preference) { .toast { animation: up .2s ease-out; } @keyframes up { from { transform: translate(-50%, 8px); opacity: 0; } } }
+@media (min-width: 560px) { .fld { grid-template-columns: 150px 1fr; } }
+</style>
+
+</head>
+<body>
+<main id="app"></main>
+<nav class="nav" id="nav">
+  <button data-act="tab" data-v="cases"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>Vụ án</button>
+  <button data-act="tab" data-v="docs"><svg viewBox="0 0 24 24"><path d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path d="M14 3v5h5M9 13h7M9 17h5"/></svg>Văn bản</button>
+  <button class="plus" data-act="add" aria-label="Thêm văn bản"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  <button data-act="tab" data-v="search"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>Tra cứu</button>
+  <button data-act="tab" data-v="data"><svg viewBox="0 0 24 24"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>Dữ liệu</button>
+</nav>
+<div id="overlay"></div>
+<input type="file" id="fCam" accept="image/*" capture="environment" hidden>
+<input type="file" id="fPick" accept="image/*" multiple hidden>
+<input type="file" id="fRestore" accept="application/json,.json" hidden>
+
+<script>
+// ===== Bộ tách thông tin văn bản hành chính (NĐ 30/2020) từ chữ nhận dạng =====
+function khongDau(s) {
+  return String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+}
+function chuanHoa(s) { return khongDau(s).toLowerCase().replace(/\s+/g, ' ').trim(); }
+
+const LOAI_VB = [
+  ['GIAY TRIEU TAP', 'Giấy triệu tập'], ['GIAY MOI', 'Giấy mời'], ['GIAY XAC NHAN', 'Giấy xác nhận'],
+  ['QUYET DINH', 'Quyết định'], ['CONG VAN', 'Công văn'], ['KE HOACH', 'Kế hoạch'],
+  ['BAO CAO', 'Báo cáo'], ['THONG BAO', 'Thông báo'], ['TO TRINH', 'Tờ trình'],
+  ['YEU CAU', 'Yêu cầu'], ['BIEN BAN', 'Biên bản'], ['KET LUAN', 'Kết luận'],
+  ['CHI THI', 'Chỉ thị'], ['DE NGHI', 'Đề nghị'], ['CAO TRANG', 'Cáo trạng'],
+  ['BAN AN', 'Bản án'], ['PHUONG AN', 'Phương án'], ['HUONG DAN', 'Hướng dẫn'],
+  ['CHUONG TRINH', 'Chương trình'], ['QUY CHE', 'Quy chế'], ['LENH', 'Lệnh'],
+  ['DIEN', 'Điện'], ['TRICH LUC', 'Trích lục'], ['PHIEU', 'Phiếu']
+];
+const DUNG = /^(can cu|kinh gui|thuc hien|xet |theo |hom nay|toi |chung toi|ngay \d|vao hoi|noi nhan|quyet dinh:|dieu 1|i\.|1\.)/;
+
+function laChuHoa(line) {
+  const letters = line.replace(/[^\p{L}]/gu, '');
+  if (letters.length < 3) return false;
+  const up = letters.replace(/[^\p{Lu}]/gu, '').length;
+  return up / letters.length >= 0.75;
+}
+function viThuong(s) {
+  const t = s.toLocaleLowerCase('vi');
+  return t.charAt(0).toLocaleUpperCase('vi') + t.slice(1);
+}
+function catTieuNgu(line) {
+  // Bỏ quốc hiệu, tiêu ngữ bị OCR gộp chung dòng với tên cơ quan
+  const n = khongDau(line).toUpperCase();
+  let cut = line.length;
+  for (const k of ['CONG HOA', 'DOC LAP', 'DQC LAP', 'XA HOI CHU NGHIA']) {
+    const i = n.indexOf(k);
+    if (i >= 0 && i < cut) cut = i;
+  }
+  return line.slice(0, cut).replace(/[_\-–—=~.*]{2,}/g, ' ').replace(/\s+/g, ' ').trim();
+}
+
+function tachThongTin(text) {
+  const kq = {};
+  if (!text) return kq;
+  const lines = text.split(/\r?\n/).map(l => l.replace(/\s+/g, ' ').trim());
+
+  // 1. Số, ký hiệu
+  const reSo = /(?:^|[\s(])S[ốôóòỏõọồổỗộo06][\s]*[:;.,]?\s*([\dlIOo]{1,6}|\.{2,}|…)?\s*[\/|]\s*([A-ZĐa-zđ0-9][A-ZĐa-zđ0-9\-./()]{1,40})/u;
+  let soIdx = -1;
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(reSo);
+    if (m && /[A-ZĐa-zđ]/.test(m[2])) {
+      const so = m[1] && /\d/.test(m[1]) ? m[1].replace(/[lI]/g, '1').replace(/[Oo]/g, '0') : '';
+      const kh = m[2].replace(/[.,;]+$/, '').toUpperCase();
+      kq.so = so ? `${so}/${kh}` : `/${kh}`;
+      soIdx = i;
+      break;
+    }
+  }
+
+  // 2. Ngày ban hành
+  const joined = lines.join(' ');
+  const reNgay = [
+    /ng[àaáảạãầ]y\s*(\d{1,2})\s*th[áaàảạ]ng\s*(\d{1,2})\s*n[ăaắâặằ]m\s*(\d{4})/i,
+    /(\d{1,2})\s*th[áaàảạ]ng\s*(\d{1,2})\s*n[ăaắâặằ]m\s*(\d{4})/i,
+    /\b(\d{1,2})[\/.-](\d{1,2})[\/.-](20\d{2})\b/
+  ];
+  let ngayIdx = -1;
+  for (const re of reNgay) {
+    const m = joined.match(re);
+    if (m) {
+      const d = +m[1], mo = +m[2], y = +m[3];
+      if (d >= 1 && d <= 31 && mo >= 1 && mo <= 12 && y >= 1990 && y <= 2100) {
+        kq.ngay = `${y}-${String(mo).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+        ngayIdx = lines.findIndex(l => re.test(l));
+        break;
+      }
+    }
+  }
+
+  // 3. Cơ quan ban hành: các dòng chữ hoa phía trên dòng "Số"
+  const dau = soIdx > 0 ? soIdx : Math.min(lines.length, 6);
+  const cq = [];
+  for (let i = 0; i < dau; i++) {
+    const l = catTieuNgu(lines[i]);
+    if (l.length >= 4 && laChuHoa(l) && !/^(MAT|KHAN|THUONG KHAN|HOA TOC|TUYET MAT|TOI MAT)$/.test(khongDau(l).toUpperCase())) cq.push(l);
+  }
+  if (cq.length) kq.coQuan = cq.slice(0, 3).join(' – ');
+
+  // 4. Loại văn bản và trích yếu
+  const batDau = Math.max(soIdx, ngayIdx, 0);
+  let vvIdx = -1;
+  for (let i = Math.max(soIdx, 0); i < Math.min(lines.length, batDau + 12); i++) {
+    const m = lines[i].match(/V\s*[\/|]\s*v\s*[:.]?\s*(.+)/i);
+    if (m) {
+      let t = m[1].replace(/(Quảng Ngãi|Hà Nội)?,?\s*ng[àa]y.*$/i, '').trim();
+      vvIdx = i;
+      // ghép dòng tiếp theo khi trích yếu xuống dòng
+      for (let j = i + 1; j < Math.min(lines.length, i + 3); j++) {
+        const nl = lines[j];
+        if (!nl || DUNG.test(chuanHoa(nl)) || laChuHoa(nl) || /ng[àa]y\s*\d/i.test(nl)) break;
+        if (nl.length > 70) break;
+        t += ' ' + nl;
+      }
+      kq.trichYeu = viThuong(t.replace(/\s+/g, ' ').trim()).replace(/^./, c => c.toLocaleUpperCase('vi'));
+      kq.loaiVb = 'Công văn';
+      break;
+    }
+  }
+  if (!kq.trichYeu) {
+    for (let i = batDau; i < Math.min(lines.length, batDau + 15); i++) {
+      const l = lines[i];
+      if (!l || !laChuHoa(l)) continue;
+      const n = khongDau(l).toUpperCase().replace(/[^A-Z ]/g, '').replace(/\s+/g, ' ').trim();
+      const hit = LOAI_VB.find(([k]) => n === k || n.startsWith(k + ' '));
+      if (!hit) continue;
+      kq.loaiVb = hit[1];
+      const words = l.split(' ');
+      let du = words.slice(hit[0].split(' ').length).join(' ');
+      const phan = du ? [du] : [];
+      for (let j = i + 1; j < Math.min(lines.length, i + 4); j++) {
+        const nl = lines[j];
+        if (!nl) { if (phan.length) break; else continue; }
+        const c = chuanHoa(nl);
+        if (DUNG.test(c) || /^[_\-–—=~.*\s]+$/.test(nl)) break;
+        if (/^(co quan|thu truong|pho thu truong|vien truong|chanh an|giam doc|truong phong|cong an|uy ban|toa an|vien kiem sat)/.test(c)) break;
+        if (phan.length === 0 || /^(cua|ve viec|ve |v\/v|doi voi|trong |tai |nam |thang |quy )/.test(c)) { phan.push(nl); continue; }
+        break;
+      }
+      let rest = phan.join(' ').replace(/\s+/g, ' ').trim();
+      if (rest && laChuHoa(rest)) rest = rest.toLocaleLowerCase('vi');
+      rest = rest.replace(/^[,:\-–\s]+/, '');
+      kq.trichYeu = rest ? `${hit[1]} ${rest.charAt(0).toLocaleLowerCase('vi') + rest.slice(1)}` : hit[1];
+      break;
+    }
+  }
+
+  // 4b. Đối chiếu chữ viết tắt loại văn bản trong ký hiệu (sửa lỗi nhận dạng 1 ký tự: VC→YC, QD→QĐ)
+  const MA = { 'Quyết định': 'QĐ', 'Yêu cầu': 'YC', 'Kế hoạch': 'KH', 'Báo cáo': 'BC', 'Thông báo': 'TB', 'Tờ trình': 'TTR',
+    'Biên bản': 'BB', 'Kết luận': 'KL', 'Lệnh': 'L', 'Chỉ thị': 'CT', 'Giấy mời': 'GM', 'Giấy triệu tập': 'GTT',
+    'Đề nghị': 'ĐN', 'Hướng dẫn': 'HD', 'Phương án': 'PA', 'Chương trình': 'CTR', 'Quy chế': 'QC', 'Công văn': 'CV' };
+  if (kq.so && kq.loaiVb && MA[kq.loaiVb]) {
+    const m = kq.so.match(/^(\d*\/)([A-ZĐ]+)(.*)$/);
+    const want = MA[kq.loaiVb];
+    if (m && m[2] !== want && m[2].length === want.length) {
+      let diff = 0; for (let i = 0; i < want.length; i++) if (m[2][i] !== want[i]) diff++;
+      if (diff === 1) kq.so = m[1] + want + m[3];
+    }
+  }
+
+  // 5. Bị hại (nếu văn bản nêu rõ)
+  const mBh = joined.match(/b[ịi]\s*h[ạa]i\s*(?:l[àa]\s*)?(?:là\s*)?[:,]?\s*(?:(?:ông|bà|anh|chị|cháu|em|Ông|Bà|Anh|Chị)\s+)?(\p{Lu}[\p{Ll}]+(?:\s+\p{Lu}[\p{Ll}]+){1,4})/u);
+  if (mBh) kq.biHai = mBh[1].replace(/\s+/g, ' ');
+
+  return kq;
+}
+
+// Gợi ý vụ án dựa trên tên bị hại hoặc tên vụ xuất hiện trong văn bản
+function goiYVuAn(text, cases) {
+  const t = chuanHoa(text);
+  if (!t) return null;
+  let best = null;
+  for (const c of cases) {
+    let diem = 0, ly = [];
+    for (const bh of tachBiHai(c.biHai)) {
+      const n = chuanHoa(bh);
+      if (n.length >= 6 && t.includes(n)) { diem += 3; ly.push('bị hại ' + bh); }
+    }
+    const tv = chuanHoa(c.ten);
+    if (tv.length >= 12 && t.includes(tv)) { diem += 5; ly.push('tên vụ'); }
+    if (diem && (!best || diem > best.diem)) best = { caseId: c.id, diem, lyDo: ly.join(', ') };
+  }
+  return best;
+}
+function tachBiHai(s) { return String(s || '').split(/[;,\n]/).map(x => x.trim()).filter(Boolean); }
+
+
+
+/* ================= Tiện ích ================= */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const uid = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const fmtDate = s => s ? s.split('-').reverse().join('/') : '';
+const IN_FRAME = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+const APP_VER = '1.0.0';
+const ICON = {
+  back: '<svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg>',
+  edit: '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>',
+  cam: '<svg viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>',
+  img: '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="m21 16-5-5-9 9"/></svg>',
+  pen: '<svg viewBox="0 0 24 24"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg>',
+  copy: '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>',
+  search: '<svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
+};
+function toast(msg, ms = 2600) {
+  const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t);
+  setTimeout(() => t.remove(), ms);
+}
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+async function copyText(text) {
+  try { await navigator.clipboard.writeText(text); toast('Đã sao chép'); return; } catch (e) {}
+  const ta = document.createElement('textarea'); ta.value = text; ta.setAttribute('readonly', ''); ta.style.position = 'fixed'; ta.style.opacity = '0';
+  document.body.appendChild(ta); ta.select(); ta.setSelectionRange(0, text.length);
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) {}
+  ta.remove(); toast(ok ? 'Đã sao chép' : 'Không sao chép được trên thiết bị này');
+}
+async function saveFile(blob, name) {
+  if (IN_FRAME) { toast('Bản xem thử không xuất được file. Hãy dùng bản cài trên iPhone.', 3800); return false; }
+  const file = new File([blob], name, { type: blob.type });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: name }); return true; }
+    catch (e) { if (e.name === 'AbortError') return false; }
+  }
+  try {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 5000); return true;
+  } catch (e) { toast('Không lưu được file'); return false; }
+}
+
+/* ================= Cơ sở dữ liệu trên máy (IndexedDB) ================= */
+const DB = {
+  mem: null, p: null,
+  open() {
+    if (this.p) return this.p;
+    this.p = new Promise((res, rej) => {
+      let r;
+      try { r = indexedDB.open('so-van-ban', 1); } catch (e) { return rej(e); }
+      r.onupgradeneeded = () => {
+        const d = r.result;
+        if (!d.objectStoreNames.contains('cases')) d.createObjectStore('cases', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('docs')) d.createObjectStore('docs', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('images')) d.createObjectStore('images', { keyPath: 'id' }).createIndex('docId', 'docId');
+      };
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+      r.onblocked = () => rej(new Error('blocked'));
+    }).catch(e => { this.mem = { cases: new Map(), docs: new Map(), images: new Map() }; return null; });
+    return this.p;
+  },
+  async run(store, mode, fn) {
+    const d = await this.open();
+    if (!d) return fn(null, this.mem[store]);
+    return new Promise((res, rej) => {
+      const t = d.transaction(store, mode); const s = t.objectStore(store); let out;
+      const r = fn(s); if (r && 'onsuccess' in r) r.onsuccess = () => { out = r.result; }; else out = r;
+      t.oncomplete = () => res(out); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error || new Error('abort'));
+    });
+  },
+  all(store) { return this.run(store, 'readonly', (s, m) => s ? s.getAll() : [...m.values()]); },
+  get(store, id) { return this.run(store, 'readonly', (s, m) => s ? s.get(id) : m.get(id)); },
+  put(store, obj) { return this.run(store, 'readwrite', (s, m) => s ? s.put(obj) : (m.set(obj.id, obj), obj.id)); },
+  del(store, id) { return this.run(store, 'readwrite', (s, m) => s ? s.delete(id) : m.delete(id)); },
+  imagesOf(docId) { return this.run('images', 'readonly', (s, m) => s ? s.index('docId').getAll(docId) : [...m.values()].filter(x => x.docId === docId)); },
+  clear(store) { return this.run(store, 'readwrite', (s, m) => s ? s.clear() : m.clear()); },
+};
+
+/* ================= Trạng thái ================= */
+const S = {
+  cases: new Map(), docs: new Map(),
+  stack: [{ v: 'cases' }],
+  q: { cases: '', search: '' }, docFilter: 'all', caseFilter: 'all', caseSortAsc: lsGet('svb.sortAsc', false), showClosed: false,
+  draft: null, ocr: null, confirm: null, persisted: null, est: null,
+};
+const thumbCache = new Map(); // docId -> objectURL
+
+async function loadAll() {
+  const [cs, ds] = await Promise.all([DB.all('cases'), DB.all('docs')]);
+  S.cases = new Map(cs.map(c => [c.id, c])); S.docs = new Map(ds.map(d => [d.id, d]));
+}
+const docsOf = caseId => [...S.docs.values()].filter(d => (d.caseId || null) === caseId);
+const sortDocs = (arr, asc) => arr.sort((a, b) => {
+  const x = (a.ngay || a.ngayNhan || '') + (a.createdAt || ''), y = (b.ngay || b.ngayNhan || '') + (b.createdAt || '');
+  return asc ? x.localeCompare(y) : y.localeCompare(x);
+});
+function caseStats(c) {
+  const ds = docsOf(c.id); const last = sortDocs([...ds], false)[0];
+  return { n: ds.length, den: ds.filter(d => d.loai === 'den').length, nb: ds.filter(d => d.loai === 'noibo').length, last: last ? (last.ngay || last.ngayNhan) : '' };
+}
+function haystack(d) {
+  const c = d.caseId ? S.cases.get(d.caseId) : null;
+  return chuanHoa([d.so, d.coQuan, d.loaiVb, d.trichYeu, d.biHai, d.ghiChu, c?.ten, c?.biHai, d.ocrText, fmtDate(d.ngay)].join(' '));
+}
+function matchQ(text, q) { const t = chuanHoa(q); if (!t) return true; return t.split(' ').every(w => text.includes(w)); }
+
+/* ================= Điều hướng ================= */
+const cur = () => S.stack[S.stack.length - 1];
+function go(view) { S.stack.push(view); render(true); }
+function back() {
+  if (cur().v === 'edit') dropDraft();
+  if (S.stack.length > 1) S.stack.pop();
+  if (cur().v === 'edit' && !S.draft) S.stack.pop();
+  render(true);
+}
+function dropDraft() { if (S.draft) S.draft.pages.forEach(p => { try { URL.revokeObjectURL(p.url); } catch (e) {} }); S.draft = null; S.ocr = null; }
+function tab(v) { if (cur().v === 'edit') dropDraft(); S.stack = [{ v }]; render(true); }
+function replace(view) { S.stack[S.stack.length - 1] = view; render(true); }
+
+/* ================= Vẽ giao diện ================= */
+function header(title, { backBtn = false, right = '', brand = false } = {}) {
+  return `<header class="top" id="top">
+    ${backBtn ? `<button class="icon-btn" data-act="back" aria-label="Quay lại">${ICON.back}</button>` : ''}
+    ${brand ? `<h1 class="brand">Sổ văn bản <small>PC02</small></h1>` : `<h1>${esc(title)}</h1>`}
+    ${right}
+  </header>`;
+}
+function stampOf(d) {
+  return d.loai === 'den' ? '<span class="stamp den">Đến</span>' : '<span class="stamp nb">Nội bộ</span>';
+}
+function docRow(d, { showCase = true } = {}) {
+  const c = d.caseId ? S.cases.get(d.caseId) : null;
+  const l3 = [d.coQuan, showCase ? (c ? c.ten : 'Chưa gắn vụ án') : d.biHai].filter(Boolean).join(' · ');
+  return `<button class="doc" data-act="openDoc" data-id="${d.id}">
+    <div class="main">
+      <div class="l1">${stampOf(d)}${d.mau ? '<span class="stamp mau">Mẫu</span>' : ''}<span class="so">${esc(d.so || 'Không số')}</span><span class="ngay">${esc(fmtDate(d.ngay || d.ngayNhan))}</span></div>
+      <div class="ty">${esc(d.trichYeu || d.loaiVb || '(Chưa có trích yếu)')}</div>
+      ${l3 ? `<div class="l3">${esc(l3)}</div>` : ''}
+    </div>
+    ${(d.imageIds || []).length ? `<div class="th" data-thumb="${d.id}"></div>` : ''}
+  </button>`;
+}
+function docRegister(list, opts) {
+  if (!list.length) return '';
+  let html = '', month = null;
+  for (const d of list) {
+    const k = (d.ngay || d.ngayNhan || '').slice(0, 7);
+    if (opts?.group && k !== month) { month = k; html += `<div class="month">${k ? 'Tháng ' + k.split('-').reverse().join('/') : 'Chưa rõ ngày'}</div>`; }
+    html += docRow(d, opts);
+  }
+  return `<div class="reg">${html}</div>`;
+}
+function emptyState(title, text, btn = '') {
+  return `<div class="empty-state"><div class="ill"></div><h2>${esc(title)}</h2><p>${esc(text)}</p>${btn}</div>`;
+}
+
+function backupBanner() {
+  if (!S.docs.size) return '';
+  const last = lsGet('svb.lastBackup', null);
+  const days = last ? Math.floor((Date.now() - last) / 864e5) : null;
+  if (days !== null && days < 7) return '';
+  if (days === null) { const oldest = Math.min(...[...S.docs.values()].filter(d => !d.mau).map(d => Date.parse(d.createdAt) || Date.now())); if (!isFinite(oldest) || Date.now() - oldest < 2 * 864e5) return ''; }
+  return `<div class="banner warn"><div><b>${days === null ? 'Chưa sao lưu lần nào.' : `Đã ${days} ngày chưa sao lưu.`}</b> Dữ liệu chỉ nằm trên máy này.</div><button class="btn" data-act="tab" data-v="data">Sao lưu</button></div>`;
+}
+
+function vCases() {
+  const q = S.q.cases;
+  return header('', { brand: true, right: `<button class="txt-btn" data-act="newCase">+ Vụ án</button>` }) +
+    backupBanner() +
+    `<div class="search">${ICON.search}<input id="qCases" type="search" placeholder="Tìm tên vụ án, bị hại" value="${esc(q)}" autocomplete="off"></div>
+     <div id="caseList">${caseListHtml()}</div>`;
+}
+function caseListHtml() {
+  const q = S.q.cases;
+  let cs = [...S.cases.values()].map(c => ({ c, st: caseStats(c) }));
+  if (q) cs = cs.filter(({ c }) => matchQ(chuanHoa(c.ten + ' ' + c.biHai + ' ' + (c.ghiChu || '')), q));
+  const closedN = cs.filter(x => x.c.trangThai === 'xong').length;
+  if (!S.showClosed && !q) cs = cs.filter(x => x.c.trangThai !== 'xong');
+  cs.sort((a, b) => (b.st.last || b.c.createdAt).localeCompare(a.st.last || a.c.createdAt));
+  const loose = docsOf(null);
+  if (!S.cases.size && !S.docs.size) {
+    return emptyState('Chưa có vụ án nào', 'Tạo vụ án trước, rồi chụp văn bản để gắn vào. Văn bản chưa rõ thuộc vụ nào vẫn lưu được.',
+      `<div class="row-btns" style="width:100%;max-width:360px"><button class="btn primary" data-act="newCase">${ICON.plus}Tạo vụ án</button><button class="btn" data-act="seed">Xem dữ liệu mẫu</button></div>`);
+  }
+  let html = '<div class="cases">';
+  if (!q && loose.length) html += `<button class="case loose" data-act="openCase" data-id="__none"><h3>Chưa gắn vụ án</h3><div class="meta"><span><b class="mono">${loose.length}</b> văn bản cần phân loại</span></div></button>`;
+  for (const { c, st } of cs) {
+    const bh = tachBiHai(c.biHai);
+    html += `<button class="case" data-act="openCase" data-id="${c.id}">
+      <h3>${esc(c.ten)}</h3>
+      ${bh.length ? `<div class="bh"><span>Bị hại:</span> ${esc(bh.slice(0, 3).join(', '))}${bh.length > 3 ? ` <span>+${bh.length - 3}</span>` : ''}</div>` : ''}
+      <div class="meta">${c.mau ? '<span class="stamp mau">Mẫu</span>' : ''}${c.trangThai === 'xong' ? '<span class="closed">Đã kết thúc</span>' : ''}
+        <span><b class="mono">${st.n}</b> văn bản</span><span>${st.den} đến · ${st.nb} nội bộ</span>${st.last ? `<span class="mono">${fmtDate(st.last)}</span>` : ''}</div>
+    </button>`;
+  }
+  if (q && !cs.length) html += `<p class="note">Không có vụ án khớp “${esc(q)}”. Thử tìm trong mục Tra cứu để tìm cả nội dung văn bản.</p>`;
+  html += '</div>';
+  if (!q && closedN) html += `<p style="text-align:center"><button class="linkish" data-act="toggleClosed">${S.showClosed ? 'Ẩn' : 'Hiện'} ${closedN} vụ đã kết thúc</button></p>`;
+  return html;
+}
+
+function vCase(id) {
+  const none = id === '__none';
+  const c = none ? { id: null, ten: 'Chưa gắn vụ án', biHai: '' } : S.cases.get(id);
+  if (!c) return header('Không tìm thấy', { backBtn: true }) + emptyState('Vụ án đã bị xóa', '');
+  let ds = docsOf(c.id);
+  const st = { den: ds.filter(d => d.loai === 'den').length, nb: ds.filter(d => d.loai === 'noibo').length };
+  if (S.caseFilter !== 'all') ds = ds.filter(d => d.loai === S.caseFilter);
+  sortDocs(ds, S.caseSortAsc);
+  const bh = tachBiHai(c.biHai);
+  return header(c.ten, { backBtn: true, right: none ? '' : `<button class="icon-btn" data-act="editCase" data-id="${c.id}" aria-label="Sửa vụ án">${ICON.edit}</button>` }) +
+    (none ? `<div class="banner info">Mở từng văn bản, chọn “Sửa” để gắn vào vụ án.</div>` : `<section class="case-head">
+      ${bh.length ? `<div><div class="lbl">Bị hại</div><div class="people">${bh.map(x => `<span class="person">${esc(x)}</span>`).join('')}</div></div>` : ''}
+      ${c.ghiChu ? `<div><div class="lbl">Ghi chú</div><div>${esc(c.ghiChu)}</div></div>` : ''}
+      <div class="counts"><span><b>${st.den + st.nb}</b> văn bản</span><span><b>${st.den}</b> đến</span><span><b>${st.nb}</b> nội bộ</span>${c.trangThai === 'xong' ? '<span>Đã kết thúc</span>' : ''}</div>
+      <div class="row-btns"><button class="btn primary" data-act="addTo" data-id="${c.id}">${ICON.cam}Thêm văn bản</button><button class="btn" data-act="copyList" data-id="${c.id}">${ICON.copy}Chép bảng kê</button></div>
+    </section>`) +
+    `<div class="toolbar"><div class="chips">
+        ${[['all', 'Tất cả', st.den + st.nb], ['den', 'Đến', st.den], ['noibo', 'Nội bộ', st.nb]].map(([k, t, n]) => `<button class="chip ${S.caseFilter === k ? 'on' : ''}" data-act="caseFilter" data-k="${k}">${t}<span class="n">${n}</span></button>`).join('')}
+      </div><span class="sp"></span><button class="linkish" data-act="caseSort">${S.caseSortAsc ? 'Cũ → mới' : 'Mới → cũ'}</button></div>` +
+    (ds.length ? docRegister(ds, { group: true, showCase: false }) : `<p class="note">Chưa có văn bản${S.caseFilter !== 'all' ? ' loại này' : ''}.</p>`);
+}
+
+function vDocs() {
+  const all = [...S.docs.values()];
+  const n = { all: all.length, den: all.filter(d => d.loai === 'den').length, noibo: all.filter(d => d.loai === 'noibo').length, none: all.filter(d => !d.caseId).length };
+  let ds = all;
+  if (S.docFilter === 'den' || S.docFilter === 'noibo') ds = ds.filter(d => d.loai === S.docFilter);
+  if (S.docFilter === 'none') ds = ds.filter(d => !d.caseId);
+  sortDocs(ds, false);
+  return header('Sổ văn bản') +
+    `<div class="chips">${[['all', 'Tất cả'], ['den', 'Đến'], ['noibo', 'Nội bộ'], ['none', 'Chưa gắn vụ']].map(([k, t]) => `<button class="chip ${S.docFilter === k ? 'on' : ''}" data-act="docFilter" data-k="${k}">${t}<span class="n">${n[k]}</span></button>`).join('')}</div>` +
+    (ds.length ? docRegister(ds, { group: true }) : emptyState('Chưa có văn bản', 'Bấm nút + ở giữa thanh dưới để chụp hoặc nhập văn bản đầu tiên.'));
+}
+
+function vSearch() {
+  return header('Tra cứu') +
+    `<div class="search">${ICON.search}<input id="qSearch" type="search" placeholder="Số ký hiệu, trích yếu, cơ quan, bị hại, nội dung" value="${esc(S.q.search)}" autocomplete="off"></div>
+     <div id="searchRes">${searchHtml()}</div>`;
+}
+function searchHtml() {
+  const q = S.q.search.trim();
+  if (!q) return `<p class="note">Tìm không cần gõ dấu. Tìm trong số ký hiệu, trích yếu, cơ quan ban hành, tên vụ án, bị hại, ghi chú và toàn bộ chữ nhận dạng từ ảnh văn bản.</p>`;
+  const cs = [...S.cases.values()].filter(c => matchQ(chuanHoa(c.ten + ' ' + c.biHai), q));
+  const ds = sortDocs([...S.docs.values()].filter(d => matchQ(haystack(d), q)), false);
+  let html = '';
+  if (cs.length) html += `<div class="sec-label">Vụ án · ${cs.length}</div><div class="cases">${cs.map(c => `<button class="case" data-act="openCase" data-id="${c.id}"><h3>${esc(c.ten)}</h3>${c.biHai ? `<div class="bh"><span>Bị hại:</span> ${esc(tachBiHai(c.biHai).join(', '))}</div>` : ''}</button>`).join('')}</div>`;
+  html += `<div class="sec-label">Văn bản · ${ds.length}</div>` + (ds.length ? docRegister(ds) : '<p class="note">Không có văn bản khớp.</p>');
+  return html;
+}
+
+function vDoc(id) {
+  const d = S.docs.get(id);
+  if (!d) return header('Không tìm thấy', { backBtn: true }) + emptyState('Văn bản đã bị xóa', '');
+  const c = d.caseId ? S.cases.get(d.caseId) : null;
+  const f = (k, v, cls = '') => `<div class="fld"><dt>${k}</dt><dd class="${v ? cls : 'empty'}">${v || '—'}</dd></div>`;
+  const nP = (d.imageIds || []).length;
+  return header(d.loaiVb || 'Văn bản', { backBtn: true, right: `<button class="txt-btn" data-act="editDoc" data-id="${d.id}">Sửa</button>` }) +
+    (nP ? `<div class="pages" id="pages">${d.imageIds.map((x, i) => `<button data-act="view" data-i="${i}" data-id="${d.id}" aria-label="Xem trang ${i + 1}"><span class="pn">${i + 1}/${nP}</span></button>`).join('')}</div>` : '') +
+    `<dl class="fields" style="margin:0">
+      <div class="fld"><dt>Sổ</dt><dd>${stampOf(d)}${d.mau ? ' <span class="stamp mau">Mẫu</span>' : ''}</dd></div>
+      ${f('Số, ký hiệu', d.so ? `<span class="mono">${esc(d.so)}</span>` : '')}
+      ${f('Ngày ban hành', d.ngay ? `<span class="mono">${fmtDate(d.ngay)}</span>` : '')}
+      ${d.loai === 'den' ? f('Ngày nhận', d.ngayNhan ? `<span class="mono">${fmtDate(d.ngayNhan)}</span>` : '') : ''}
+      ${f('Cơ quan ban hành', esc(d.coQuan))}
+      ${f('Trích yếu', esc(d.trichYeu))}
+      ${f('Vụ án', c ? `<button class="linkish" data-act="openCase" data-id="${c.id}">${esc(c.ten)}</button>` : '')}
+      ${f('Bị hại', esc(d.biHai))}
+      ${f('Ghi chú', esc(d.ghiChu))}
+    </dl>
+    <div class="row-btns" style="margin-top:12px">
+      <button class="btn" data-act="copyDoc" data-id="${d.id}">${ICON.copy}Sao chép thông tin</button>
+      <button class="btn danger" data-act="askDelDoc" data-id="${d.id}">Xóa văn bản</button>
+    </div>
+    ${d.ocrText ? `<details class="ocr"><summary>Chữ nhận dạng từ ảnh <span class="note">${d.ocrText.length.toLocaleString('vi')} ký tự</span></summary><pre>${esc(d.ocrText)}</pre>
+      <div style="padding:0 14px 14px"><button class="btn" data-act="copyOcr" data-id="${d.id}">${ICON.copy}Sao chép chữ</button></div></details>` : ''}
+    <p class="note" style="margin-top:14px">Nhập lúc <span class="mono">${new Date(d.createdAt).toLocaleString('vi-VN')}</span>${d.updatedAt && d.updatedAt !== d.createdAt ? ` · sửa lúc <span class="mono">${new Date(d.updatedAt).toLocaleString('vi-VN')}</span>` : ''}</p>`;
+}
+
+/* ---------- Biểu mẫu văn bản ---------- */
+const LOAI_LIST = ['Công văn', 'Quyết định', 'Yêu cầu', 'Kế hoạch', 'Báo cáo', 'Thông báo', 'Tờ trình', 'Lệnh', 'Biên bản', 'Kết luận', 'Đề nghị', 'Giấy mời', 'Giấy triệu tập', 'Chỉ thị', 'Hướng dẫn', 'Phương án'];
+function newDraft(extra = {}) {
+  return { id: uid(), isNew: true, loai: 'den', so: '', ngay: '', ngayNhan: today(), coQuan: '', loaiVb: '', trichYeu: '', caseId: '', biHai: '', ghiChu: '', ocrText: '', pages: [], removed: [], auto: {}, newCase: { ten: '', biHai: '' }, err: '', ...extra };
+}
+async function draftFromDoc(d) {
+  const imgs = await DB.imagesOf(d.id);
+  const order = d.imageIds || [];
+  imgs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+  return newDraft({ ...d, caseId: d.caseId || '', isNew: false, pages: imgs.map(im => ({ id: im.id, blob: im.blob, thumb: im.thumb, url: URL.createObjectURL(im.thumb || im.blob), text: im.text || '', saved: true })), auto: {} });
+}
+function fieldHtml(key, label, inner, hint = '') {
+  const a = S.draft.auto[key];
+  return `<div class="f ${a ? 'is-auto' : ''}" id="f_${key}"><label for="i_${key}">${label}${a ? '<span class="auto">TỰ ĐIỀN</span>' : ''}</label>${inner}${hint ? `<div class="hint">${hint}</div>` : ''}</div>`;
+}
+function vEdit() {
+  const d = S.draft;
+  const cases = [...S.cases.values()].filter(c => c.trangThai !== 'xong' || c.id === d.caseId).sort((a, b) => a.ten.localeCompare(b.ten, 'vi'));
+  const selCase = d.caseId && d.caseId !== '__new' ? S.cases.get(d.caseId) : null;
+  const bhList = selCase ? tachBiHai(selCase.biHai) : d.caseId === '__new' ? tachBiHai(d.newCase.biHai) : [];
+  const chosen = tachBiHai(d.biHai).map(chuanHoa);
+  const coQuanHist = [...new Set([...S.docs.values()].map(x => x.coQuan).filter(Boolean))].slice(0, 40);
+  return header(d.isNew ? 'Văn bản mới' : 'Sửa văn bản', { backBtn: true }) +
+    `<div class="form">
+      <div class="seg" role="tablist">
+        <button class="den ${d.loai === 'den' ? 'on' : ''}" data-act="setLoai" data-k="den">Văn bản đến</button>
+        <button class="nb ${d.loai === 'noibo' ? 'on' : ''}" data-act="setLoai" data-k="noibo">Văn bản nội bộ</button>
+      </div>
+      <div>
+        <div class="shots">
+          ${d.pages.map((p, i) => `<div class="shot"><img src="${p.url}" alt="Trang ${i + 1}"><span class="pn">${i + 1}</span><button class="x" data-act="rmPage" data-i="${i}" aria-label="Bỏ trang ${i + 1}">×</button></div>`).join('')}
+          <button class="add-shot" data-act="cam">${ICON.cam}Chụp trang</button>
+          <button class="add-shot" data-act="pick">${ICON.img}Chọn ảnh</button>
+        </div>
+      </div>
+      <div id="ocrBox">${ocrBoxHtml()}</div>
+      <div id="suggestBox">${suggestHtml()}</div>
+      ${fieldHtml('so', 'Số, ký hiệu', `<input id="i_so" class="mono" data-f="so" value="${esc(d.so)}" placeholder="1234/CV-PC02" autocapitalize="characters" autocomplete="off">`)}
+      <div class="two">
+        ${fieldHtml('ngay', 'Ngày ban hành', `<input id="i_ngay" type="date" data-f="ngay" value="${esc(d.ngay)}">`)}
+        ${d.loai === 'den' ? fieldHtml('ngayNhan', 'Ngày nhận', `<input id="i_ngayNhan" type="date" data-f="ngayNhan" value="${esc(d.ngayNhan)}">`) : fieldHtml('loaiVb', 'Loại văn bản', `<input id="i_loaiVb" data-f="loaiVb" list="dlLoai" value="${esc(d.loaiVb)}" placeholder="Kế hoạch">`)}
+      </div>
+      ${d.loai === 'den' ? fieldHtml('loaiVb', 'Loại văn bản', `<input id="i_loaiVb" data-f="loaiVb" list="dlLoai" value="${esc(d.loaiVb)}" placeholder="Công văn">`) : ''}
+      <datalist id="dlLoai">${LOAI_LIST.map(x => `<option value="${x}">`).join('')}</datalist>
+      ${fieldHtml('coQuan', 'Cơ quan ban hành', `<input id="i_coQuan" data-f="coQuan" list="dlCq" value="${esc(d.coQuan)}" placeholder="Viện KSND tỉnh Quảng Ngãi" autocomplete="off">`)}
+      <datalist id="dlCq">${coQuanHist.map(x => `<option value="${esc(x)}">`).join('')}</datalist>
+      ${fieldHtml('trichYeu', 'Trích yếu nội dung', `<textarea id="i_trichYeu" data-f="trichYeu" placeholder="V/v cung cấp thông tin tài khoản">${esc(d.trichYeu)}</textarea>`)}
+      ${fieldHtml('caseId', 'Vụ án', `<select id="i_caseId" data-f="caseId">
+          <option value="">— Chưa gắn vụ án —</option>
+          ${cases.map(c => `<option value="${c.id}" ${c.id === d.caseId ? 'selected' : ''}>${esc(c.ten)}</option>`).join('')}
+          <option value="__new" ${d.caseId === '__new' ? 'selected' : ''}>+ Tạo vụ án mới…</option>
+        </select>`)}
+      ${d.caseId === '__new' ? `<div class="newcase">
+          <div class="f"><label for="i_ncTen">Tên vụ án mới</label><input id="i_ncTen" data-nc="ten" value="${esc(d.newCase.ten)}" placeholder="Lừa đảo chiếm đoạt tài sản xảy ra tại …"></div>
+          <div class="f"><label for="i_ncBh">Bị hại của vụ</label><input id="i_ncBh" data-nc="biHai" value="${esc(d.newCase.biHai)}" placeholder="Nhiều người cách nhau bằng dấu ;"></div>
+        </div>` : ''}
+      ${fieldHtml('biHai', 'Bị hại liên quan văn bản', `<input id="i_biHai" data-f="biHai" value="${esc(d.biHai)}" placeholder="Để trống nếu văn bản chung cho cả vụ" autocomplete="off">
+          ${bhList.length ? `<div class="pick">${bhList.map(x => `<button data-act="pickBh" data-name="${esc(x)}" class="${chosen.includes(chuanHoa(x)) ? 'on' : ''}">${esc(x)}</button>`).join('')}</div>` : ''}`)}
+      ${fieldHtml('ghiChu', 'Ghi chú', `<textarea id="i_ghiChu" data-f="ghiChu" placeholder="Việc cần làm, người giao, nơi lưu bản gốc…">${esc(d.ghiChu)}</textarea>`)}
+      ${d.err ? `<div class="err-msg">${esc(d.err)}</div>` : ''}
+      <div class="savebar"><button class="btn" data-act="back">Hủy</button><button class="btn primary" data-act="saveDoc" ${S.ocr?.busy ? 'disabled' : ''}>${S.ocr?.busy ? 'Đang nhận dạng…' : 'Lưu văn bản'}</button></div>
+    </div>`;
+}
+function ocrBoxHtml() {
+  const o = S.ocr;
+  if (!o) return '';
+  if (o.busy) return `<div class="ocrbox"><div>${esc(o.msg)}</div><div class="bar"><i style="width:${Math.round((o.pct || 0) * 100)}%"></i></div></div>`;
+  if (o.err) return `<div class="ocrbox err"><div>${esc(o.err)}</div></div>`;
+  if (o.done) return `<div class="ocrbox ok"><div>${esc(o.done)}</div></div>`;
+  return '';
+}
+function suggestHtml() {
+  const d = S.draft; if (!d || d.caseId || !d.ocrText) return '';
+  const g = goiYVuAn(d.ocrText, [...S.cases.values()]);
+  if (!g) return '';
+  const c = S.cases.get(g.caseId);
+  return `<div class="suggest"><span>Có thể thuộc <b>${esc(c.ten)}</b> (khớp ${esc(g.lyDo)})</span><button data-act="acceptSuggest" data-id="${c.id}">Gắn vào vụ</button></div>`;
+}
+
+/* ---------- Biểu mẫu vụ án ---------- */
+function vCaseForm(id) {
+  const c = id ? S.cases.get(id) : { ten: '', biHai: '', ghiChu: '', trangThai: 'dang' };
+  const n = id ? docsOf(id).length : 0;
+  return header(id ? 'Sửa vụ án' : 'Vụ án mới', { backBtn: true }) +
+    `<form class="form" id="caseForm" data-id="${id || ''}">
+      <div class="f"><label for="c_ten">Tên vụ án</label><textarea id="c_ten" name="ten" required placeholder="Lừa đảo chiếm đoạt tài sản xảy ra tại xã …, tỉnh Quảng Ngãi">${esc(c.ten)}</textarea></div>
+      <div class="f"><label for="c_bh">Bị hại</label><input id="c_bh" name="biHai" value="${esc(c.biHai)}" placeholder="Nguyễn Văn A; Trần Thị B" autocomplete="off"><div class="hint">Nhiều bị hại cách nhau bằng dấu chấm phẩy. Tên bị hại dùng để gợi ý gắn văn bản khi nhận dạng ảnh.</div></div>
+      <div class="f"><label for="c_note">Ghi chú</label><textarea id="c_note" name="ghiChu" placeholder="Số hồ sơ, KSV thụ lý, mốc thời hạn…">${esc(c.ghiChu || '')}</textarea></div>
+      <div class="f"><label for="c_tt">Trạng thái</label><select id="c_tt" name="trangThai"><option value="dang" ${c.trangThai !== 'xong' ? 'selected' : ''}>Đang thụ lý</option><option value="xong" ${c.trangThai === 'xong' ? 'selected' : ''}>Đã kết thúc (ẩn khỏi danh sách chính)</option></select></div>
+      <div id="caseErr"></div>
+      <div class="savebar" style="bottom:calc(76px + env(safe-area-inset-bottom,0px))"><button type="button" class="btn" data-act="back">Hủy</button><button type="submit" class="btn primary">Lưu vụ án</button></div>
+      ${id ? `<div class="sec-label">Xóa vụ án</div><div class="panel"><div class="note">Xóa vụ án không xóa văn bản. ${n} văn bản của vụ sẽ chuyển về “Chưa gắn vụ án”.</div><button type="button" class="btn danger" data-act="askDelCase" data-id="${id}">Xóa vụ án</button></div>` : ''}
+    </form>`;
+}
+
+/* ---------- Dữ liệu ---------- */
+function vData() {
+  const all = [...S.docs.values()];
+  const pages = all.reduce((s, d) => s + (d.imageIds || []).length, 0);
+  const last = lsGet('svb.lastBackup', null);
+  const est = S.est;
+  const hasMau = all.some(d => d.mau) || [...S.cases.values()].some(c => c.mau);
+  const standalone = window.matchMedia?.('(display-mode: standalone)').matches || navigator.standalone;
+  return header('Dữ liệu') +
+    `<div class="stats">
+      <div class="stat"><b>${S.cases.size}</b><span>vụ án</span></div>
+      <div class="stat"><b>${all.filter(d => d.loai === 'den').length}</b><span>văn bản đến</span></div>
+      <div class="stat"><b>${all.filter(d => d.loai === 'noibo').length}</b><span>văn bản nội bộ</span></div>
+      <div class="stat"><b>${pages}</b><span>trang ảnh${est?.usage ? ` · ${(est.usage / 1048576).toFixed(1)} MB` : ''}</span></div>
+    </div>
+    ${DB.mem ? `<div class="banner warn" style="margin-top:12px">Trình duyệt này không cho lưu dữ liệu lâu dài. Dữ liệu sẽ mất khi đóng trang.</div>` : ''}
+    <div class="sec-label">Sao lưu</div>
+    <div class="panel">
+      <div class="note">Toàn bộ dữ liệu chỉ nằm trên iPhone này, không gửi đi đâu. Xóa ứng dụng khỏi màn hình chính là mất dữ liệu, nên cần sao lưu định kỳ ra Tệp hoặc máy tính. Lần sao lưu gần nhất: <b class="mono">${last ? new Date(last).toLocaleString('vi-VN') : 'chưa có'}</b>.</div>
+      <div class="row-btns"><button class="btn primary" data-act="backup">Xuất file sao lưu</button><button class="btn" data-act="restore">Khôi phục từ file</button></div>
+      <button class="btn" data-act="csv">Xuất danh sách văn bản (Excel)</button>
+      <div class="note">Lưu trữ bền vững: <b>${S.persisted === true ? 'đã bật' : S.persisted === false ? 'chưa bật' : 'không rõ'}</b>${S.persisted === false ? ' · <button class="linkish" data-act="persist">Yêu cầu bật</button>' : ''}</div>
+    </div>
+    <div class="sec-label">Cài lên màn hình chính iPhone</div>
+    <div class="panel">
+      ${standalone ? '<div class="note">Đang chạy như ứng dụng đã cài. Nhận dạng chữ hoạt động không cần mạng sau lần dùng đầu tiên.</div>' : `<ol class="steps">
+        <li>Mở địa chỉ ứng dụng bằng <b>Safari</b>.</li>
+        <li>Bấm nút <b>Chia sẻ</b> (ô vuông có mũi tên lên).</li>
+        <li>Chọn <b>Thêm vào MH chính</b>, đặt tên “Sổ văn bản”, bấm <b>Thêm</b>.</li>
+        <li>Mở từ biểu tượng trên màn hình chính, chụp thử một văn bản khi có mạng để tải bộ nhận dạng chữ tiếng Việt (khoảng 6 MB, chỉ tải một lần).</li>
+      </ol>`}
+    </div>
+    ${hasMau || !all.length ? `<div class="sec-label">Dữ liệu mẫu</div><div class="panel"><div class="note">Dữ liệu mẫu được đánh dấu “Mẫu”, dùng để xem thử cách hiển thị.</div>
+      ${hasMau ? '<button class="btn" data-act="unseed">Xóa dữ liệu mẫu</button>' : '<button class="btn" data-act="seed">Thêm dữ liệu mẫu</button>'}</div>` : ''}
+    <div class="sec-label">Xóa toàn bộ</div>
+    <div class="panel"><div class="note">Xóa hết vụ án, văn bản và ảnh trên máy này. Không hoàn tác được. Hãy sao lưu trước.</div><button class="btn danger" data-act="askWipe">Xóa toàn bộ dữ liệu</button></div>
+    <p class="note" style="text-align:center;margin-top:20px">Sổ văn bản · phiên bản <span class="mono">${APP_VER}</span></p>`;
+}
+
+/* ---------- Render tổng ---------- */
+function render(scrollTop) {
+  const t = cur(); let html = '';
+  switch (t.v) {
+    case 'cases': html = vCases(); break;
+    case 'case': html = vCase(t.id); break;
+    case 'docs': html = vDocs(); break;
+    case 'search': html = vSearch(); break;
+    case 'doc': html = vDoc(t.id); break;
+    case 'edit': if (!S.draft) { S.stack.pop(); return render(scrollTop); } html = vEdit(); break;
+    case 'caseForm': html = vCaseForm(t.id); break;
+    case 'data': html = vData(); break;
+  }
+  $('#app').innerHTML = html;
+  const root = S.stack[0].v;
+  document.querySelectorAll('#nav [data-act="tab"]').forEach(b => b.classList.toggle('on', b.dataset.v === root));
+  if (scrollTop) window.scrollTo(0, 0);
+  hydrate();
+}
+async function hydrate() {
+  document.querySelectorAll('[data-thumb]').forEach(async el => {
+    const id = el.dataset.thumb;
+    let url = thumbCache.get(id);
+    if (!url) {
+      const d = S.docs.get(id); const first = d?.imageIds?.[0]; if (!first) return;
+      const im = await DB.get('images', first); if (!im) return;
+      url = URL.createObjectURL(im.thumb || im.blob); thumbCache.set(id, url);
+    }
+    el.innerHTML = `<img src="${url}" alt="">`;
+  });
+  const pg = $('#pages');
+  if (pg) {
+    const t = cur(); const d = S.docs.get(t.id);
+    const imgs = await DB.imagesOf(t.id);
+    const order = d.imageIds || [];
+    imgs.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+    imgs.forEach((im, i) => { const b = pg.children[i]; if (b) b.insertAdjacentHTML('afterbegin', `<img src="${URL.createObjectURL(im.thumb || im.blob)}" alt="Trang ${i + 1}">`); });
+  }
+}
+window.addEventListener('scroll', () => { const h = $('#top'); if (h) h.classList.toggle('scrolled', window.scrollY > 4); }, { passive: true });
+
+/* ================= Ảnh ================= */
+function loadImg(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file); const im = new Image();
+    im.onload = () => res({ im, url }); im.onerror = () => { URL.revokeObjectURL(url); rej(new Error('Không đọc được ảnh')); };
+    im.src = url;
+  });
+}
+function toBlob(canvas, q) { return new Promise(r => canvas.toBlob(r, 'image/jpeg', q)); }
+async function processImage(file) {
+  const { im, url } = await loadImg(file);
+  const W = im.naturalWidth, H = im.naturalHeight;
+  const scale = Math.min(1, 2200 / Math.max(W, H));
+  const c = document.createElement('canvas'); c.width = Math.round(W * scale); c.height = Math.round(H * scale);
+  const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height);
+  const blob = await toBlob(c, 0.8);
+  const ts = Math.min(1, 360 / Math.max(W, H));
+  const t = document.createElement('canvas'); t.width = Math.round(W * ts); t.height = Math.round(H * ts);
+  t.getContext('2d').drawImage(im, 0, 0, t.width, t.height);
+  const thumb = await toBlob(t, 0.72);
+  URL.revokeObjectURL(url);
+  return { id: uid(), blob, thumb, url: URL.createObjectURL(thumb), text: '', saved: false };
+}
+
+/* ================= Nhận dạng chữ (chạy trên máy) ================= */
+let ocrWorkerP = null, ocrLogger = null, ocrIdle = null;
+function loadScript(src) {
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('script')); document.head.appendChild(s); });
+}
+function getOcr() {
+  if (ocrWorkerP) return ocrWorkerP;
+  ocrWorkerP = (async () => {
+    if (!window.Tesseract) await loadScript(new URL('ocr/tesseract.min.js', location.href).href);
+    const base = new URL('ocr/', location.href).href;
+    const w = await Tesseract.createWorker('vie', 1, {
+      workerPath: base + 'worker.min.js', corePath: base + 'core', langPath: base + 'lang',
+      workerBlobURL: false, gzip: true, logger: m => ocrLogger && ocrLogger(m),
+    });
+    return w;
+  })();
+  ocrWorkerP.catch(() => { ocrWorkerP = null; });
+  return ocrWorkerP;
+}
+function idleOcr() {
+  clearTimeout(ocrIdle);
+  ocrIdle = setTimeout(async () => { if (ocrWorkerP && !S.ocr?.busy) { try { (await ocrWorkerP).terminate(); } catch (e) {} ocrWorkerP = null; } }, 90000);
+}
+function setOcr(o) { S.ocr = o; const b = $('#ocrBox'); if (b) b.innerHTML = ocrBoxHtml(); const sv = $('[data-act="saveDoc"]'); if (sv) { sv.disabled = !!o?.busy; sv.textContent = o?.busy ? 'Đang nhận dạng…' : 'Lưu văn bản'; } }
+async function runOcr(pages) {
+  const d = S.draft; if (!pages.length) return;
+  const total = pages.length; let idx = 0;
+  setOcr({ busy: true, msg: 'Đang chuẩn bị bộ nhận dạng chữ tiếng Việt…', pct: 0 });
+  ocrLogger = m => {
+    if (m.status === 'recognizing text') setOcr({ busy: true, msg: `Đang nhận dạng trang ${idx + 1}/${total}`, pct: (idx + (m.progress || 0)) / total });
+    else if (/loading|initializ/.test(m.status) && idx === 0) setOcr({ busy: true, msg: 'Đang nạp bộ nhận dạng (lần đầu cần mạng)…', pct: m.progress || 0 });
+  };
+  try {
+    const w = await getOcr();
+    for (idx = 0; idx < total; idx++) {
+      const r = await w.recognize(pages[idx].blob);
+      pages[idx].text = (r.data.text || '').trim();
+    }
+    if (S.draft !== d) return;
+    d.ocrText = d.pages.map(p => p.text).filter(Boolean).join('\n\n--- trang ---\n\n');
+    const first = d.pages[0]?.text || '';
+    const kq = tachThongTin(first);
+    if (!kq.trichYeu && d.pages[1]) Object.assign(kq, Object.fromEntries(Object.entries(tachThongTin(d.ocrText)).filter(([k]) => !kq[k])));
+    const filled = [];
+    const names = { so: 'số ký hiệu', ngay: 'ngày', coQuan: 'cơ quan', loaiVb: 'loại', trichYeu: 'trích yếu', biHai: 'bị hại' };
+    for (const k of Object.keys(names)) {
+      if (kq[k] && !d[k]) { d[k] = kq[k]; d.auto[k] = true; filled.push(names[k]); }
+    }
+    if (!d.caseId) { const g = goiYVuAn(d.ocrText, [...S.cases.values()]); if (g && g.diem >= 3) { /* chỉ gợi ý, không tự gắn */ } }
+    S.ocr = { done: filled.length ? `Đã tự điền: ${filled.join(', ')}. Kiểm tra lại trước khi lưu.` : 'Đã nhận dạng xong nhưng không tách được trường nào. Nhập tay giúp em các trường còn trống.' };
+    if (cur().v === 'edit') render(false);
+  } catch (e) {
+    console.error(e);
+    setOcr({ err: IN_FRAME ? 'Bản xem thử không chạy được nhận dạng chữ. Ảnh vẫn được lưu; hãy nhập tay các trường. Bản cài trên iPhone sẽ tự điền.' : 'Chưa nhận dạng được chữ. Lần đầu cần kết nối mạng để tải bộ nhận dạng. Ảnh vẫn được lưu, có thể nhập tay.' });
+  } finally { ocrLogger = null; idleOcr(); }
+}
+
+/* ================= Lưu, xóa ================= */
+async function saveDraft() {
+  const d = S.draft; d.err = '';
+  d.so = d.so.trim(); d.trichYeu = d.trichYeu.trim(); d.coQuan = d.coQuan.trim(); d.biHai = d.biHai.trim();
+  if (!d.so && !d.trichYeu && !d.pages.length) { d.err = 'Cần ít nhất số ký hiệu, trích yếu hoặc ảnh văn bản.'; render(false); return; }
+  let caseId = d.caseId;
+  if (caseId === '__new') {
+    const ten = d.newCase.ten.trim();
+    if (!ten) { d.err = 'Nhập tên vụ án mới hoặc chọn vụ án có sẵn.'; render(false); $('#i_ncTen')?.focus(); return; }
+    const c = { id: uid(), ten, biHai: d.newCase.biHai.trim(), ghiChu: '', trangThai: 'dang', createdAt: new Date().toISOString() };
+    await DB.put('cases', c); S.cases.set(c.id, c); caseId = c.id;
+  }
+  const now = new Date().toISOString();
+  for (const p of d.pages) if (!p.saved) { await DB.put('images', { id: p.id, docId: d.id, blob: p.blob, thumb: p.thumb, text: p.text || '' }); p.saved = true; }
+  for (const id of d.removed) await DB.del('images', id);
+  const old = S.docs.get(d.id);
+  const doc = {
+    id: d.id, loai: d.loai, so: d.so, ngay: d.ngay, ngayNhan: d.loai === 'den' ? d.ngayNhan : '', coQuan: d.coQuan, loaiVb: d.loaiVb.trim(),
+    trichYeu: d.trichYeu, caseId: caseId || null, biHai: d.biHai, ghiChu: d.ghiChu.trim(), ocrText: d.ocrText,
+    imageIds: d.pages.map(p => p.id), createdAt: old?.createdAt || now, updatedAt: now, ...(old?.mau ? { mau: true } : {}),
+  };
+  await DB.put('docs', doc); S.docs.set(doc.id, doc);
+  thumbCache.delete(doc.id); dropDraft();
+  S.stack.pop(); if (cur().v === 'doc' && cur().id === doc.id) render(true); else go({ v: 'doc', id: doc.id });
+  toast('Đã lưu văn bản');
+}
+async function deleteDoc(id) {
+  const imgs = await DB.imagesOf(id); for (const im of imgs) await DB.del('images', im.id);
+  await DB.del('docs', id); S.docs.delete(id); thumbCache.delete(id);
+}
+
+/* ================= Lớp phủ: bảng chọn, xác nhận, xem ảnh ================= */
+function sheet(html) { $('#overlay').innerHTML = `<div class="sheet-bg" data-act="closeOverlay"><div class="sheet" data-stop="1"><div class="grab"></div>${html}</div></div>`; }
+function closeOverlay() { $('#overlay').innerHTML = ''; }
+function confirmSheet(title, text, btnLabel, act, id) {
+  sheet(`<h3>${esc(title)}</h3><p>${esc(text)}</p><button class="btn danger block" data-act="${act}" data-id="${id || ''}">${esc(btnLabel)}</button><button class="btn block" data-act="closeOverlay">Hủy</button>`);
+}
+let viewerState = null;
+async function openViewer(docId, i) {
+  const d = S.docs.get(docId); const ids = d.imageIds || [];
+  const im = await DB.get('images', ids[i]); if (!im) return;
+  if (viewerState?.url) URL.revokeObjectURL(viewerState.url);
+  const url = URL.createObjectURL(im.blob);
+  viewerState = { docId, i, n: ids.length, url, z: viewerState?.docId === docId ? viewerState.z : 1 };
+  drawViewer();
+}
+function drawViewer() {
+  const v = viewerState;
+  $('#overlay').innerHTML = `<div class="viewer"><div class="vbar">
+      <span>Trang ${v.i + 1}/${v.n}</span>
+      ${v.n > 1 ? `<button data-act="vPrev" ${v.i === 0 ? 'disabled' : ''}>‹</button><button data-act="vNext" ${v.i === v.n - 1 ? 'disabled' : ''}>›</button>` : ''}
+      <button data-act="vZoom">${v.z === 1 ? 'Phóng to' : v.z === 2 ? 'To hơn' : 'Vừa màn'}</button>
+      <button data-act="vClose">Đóng</button></div>
+    <div class="vscroll"><img src="${v.url}" alt="Trang ${v.i + 1}" style="width:${v.z * 100}%"></div></div>`;
+}
+
+/* ================= Sao lưu, khôi phục, xuất ================= */
+const blobToB64 = b => new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(b); });
+function b64ToBlobSync(dataUrl) {
+  const [h, b] = dataUrl.split(','); const mime = (h.match(/data:([^;]+)/) || [])[1] || 'image/jpeg';
+  const bin = atob(b); const u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i);
+  return new Blob([u], { type: mime });
+}
+async function doBackup() {
+  toast('Đang tạo file sao lưu…');
+  const images = await DB.all('images');
+  const out = { app: 'so-van-ban', version: 1, exportedAt: new Date().toISOString(), cases: [...S.cases.values()], docs: [...S.docs.values()], images: [] };
+  for (const im of images) out.images.push({ id: im.id, docId: im.docId, text: im.text || '', blob: await blobToB64(im.blob), thumb: im.thumb ? await blobToB64(im.thumb) : null });
+  const blob = new Blob([JSON.stringify(out)], { type: 'application/json' });
+  const ok = await saveFile(blob, `SoVanBan-saoluu-${today()}.json`);
+  if (ok) { lsSet('svb.lastBackup', Date.now()); toast('Đã xuất file sao lưu'); if (cur().v === 'data') render(false); }
+}
+async function doRestore(file) {
+  let data;
+  try { data = JSON.parse(await file.text()); } catch (e) { toast('File không đúng định dạng sao lưu'); return; }
+  if (data?.app !== 'so-van-ban' || !Array.isArray(data.docs)) { toast('File này không phải bản sao lưu của Sổ văn bản'); return; }
+  sheet(`<h3>Khôi phục từ file</h3><p>File có ${data.cases.length} vụ án, ${data.docs.length} văn bản, ${data.images.length} trang ảnh (xuất lúc ${new Date(data.exportedAt).toLocaleString('vi-VN')}). Bản ghi trùng sẽ được ghi đè bằng bản trong file, bản ghi khác giữ nguyên.</p>
+    <button class="btn primary block" data-act="doRestore">Khôi phục</button><button class="btn block" data-act="closeOverlay">Hủy</button>`);
+  S.pendingRestore = data;
+}
+async function applyRestore() {
+  const data = S.pendingRestore; S.pendingRestore = null; closeOverlay(); toast('Đang khôi phục…');
+  try {
+    for (const c of data.cases) await DB.put('cases', c);
+    for (const im of data.images) await DB.put('images', { id: im.id, docId: im.docId, text: im.text || '', blob: b64ToBlobSync(im.blob), thumb: im.thumb ? b64ToBlobSync(im.thumb) : null });
+    for (const d of data.docs) await DB.put('docs', d);
+    await loadAll(); thumbCache.clear(); render(true); toast(`Đã khôi phục ${data.docs.length} văn bản`);
+  } catch (e) { console.error(e); toast('Khôi phục lỗi giữa chừng. Kiểm tra dung lượng máy rồi thử lại.', 4000); }
+}
+function csvCell(v) { const s = String(v ?? ''); return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; }
+async function doCsv() {
+  const head = ['STT', 'Sổ', 'Số, ký hiệu', 'Ngày ban hành', 'Ngày nhận', 'Cơ quan ban hành', 'Loại văn bản', 'Trích yếu', 'Vụ án', 'Bị hại', 'Ghi chú', 'Số trang ảnh'];
+  const ds = sortDocs([...S.docs.values()], true);
+  const rows = ds.map((d, i) => [i + 1, d.loai === 'den' ? 'Đến' : 'Nội bộ', d.so, fmtDate(d.ngay), fmtDate(d.ngayNhan), d.coQuan, d.loaiVb, d.trichYeu, S.cases.get(d.caseId)?.ten || '', d.biHai, d.ghiChu, (d.imageIds || []).length]);
+  const csv = '﻿' + [head, ...rows].map(r => r.map(csvCell).join(',')).join('\r\n');
+  await saveFile(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `Danh sach van ban - ${today()}.csv`);
+}
+function caseListText(caseId) {
+  const c = S.cases.get(caseId); const ds = sortDocs(docsOf(caseId), true);
+  const lines = [`BẢNG KÊ VĂN BẢN – ${c.ten}`, ['STT', 'Số, ký hiệu', 'Ngày', 'Cơ quan ban hành', 'Trích yếu', 'Sổ'].join('\t')];
+  ds.forEach((d, i) => lines.push([i + 1, d.so, fmtDate(d.ngay || d.ngayNhan), d.coQuan, d.trichYeu, d.loai === 'den' ? 'Đến' : 'Nội bộ'].join('\t')));
+  return lines.join('\n');
+}
+
+/* ================= Dữ liệu mẫu (đánh dấu rõ) ================= */
+async function seed() {
+  const now = new Date().toISOString();
+  const c1 = { id: uid(), mau: true, ten: '[MẪU] Lừa đảo chiếm đoạt tài sản qua mạng xã hội', biHai: 'Nguyễn Văn A; Trần Thị B', ghiChu: 'Dữ liệu mẫu để xem thử, có thể xóa ở mục Dữ liệu.', trangThai: 'dang', createdAt: now };
+  const c2 = { id: uid(), mau: true, ten: '[MẪU] Lạm dụng tín nhiệm chiếm đoạt tài sản (thuê xe)', biHai: 'Lê Văn C', ghiChu: '', trangThai: 'dang', createdAt: now };
+  const mk = (o) => ({ id: uid(), mau: true, imageIds: [], ocrText: '', ghiChu: '', biHai: '', createdAt: now, updatedAt: now, ngayNhan: '', ...o });
+  const docs = [
+    mk({ loai: 'den', caseId: c1.id, so: '1234/CV-NHM', ngay: '2026-09-28', ngayNhan: '2026-10-01', coQuan: 'NGÂN HÀNG TMCP MẪU – CHI NHÁNH QUẢNG NGÃI', loaiVb: 'Công văn', trichYeu: 'Cung cấp sao kê tài khoản theo yêu cầu của Cơ quan CSĐT', biHai: 'Nguyễn Văn A' }),
+    mk({ loai: 'den', caseId: c1.id, so: '15/YC-VKS', ngay: '2026-09-15', ngayNhan: '2026-09-16', coQuan: 'VIỆN KSND MẪU', loaiVb: 'Yêu cầu', trichYeu: 'Yêu cầu điều tra' }),
+    mk({ loai: 'noibo', caseId: c1.id, so: '/KH-CSĐT', ngay: '2026-09-10', coQuan: 'CƠ QUAN CSĐT', loaiVb: 'Kế hoạch', trichYeu: 'Kế hoạch điều tra vụ án' }),
+    mk({ loai: 'noibo', caseId: c2.id, so: '', ngay: '2026-10-03', coQuan: 'ĐỘI MẪU', loaiVb: 'Báo cáo', trichYeu: 'Báo cáo tiến độ xác minh nguồn tin', biHai: 'Lê Văn C' }),
+    mk({ loai: 'den', caseId: null, so: '88/CV-MẪU', ngay: '2026-10-06', ngayNhan: '2026-10-07', coQuan: 'CÔNG TY MẪU', loaiVb: 'Công văn', trichYeu: 'Cung cấp hợp đồng thuê xe' }),
+  ];
+  for (const c of [c1, c2]) { await DB.put('cases', c); S.cases.set(c.id, c); }
+  for (const d of docs) { await DB.put('docs', d); S.docs.set(d.id, d); }
+  render(true); toast('Đã thêm dữ liệu mẫu');
+}
+async function unseed() {
+  for (const d of [...S.docs.values()].filter(x => x.mau)) await deleteDoc(d.id);
+  for (const c of [...S.cases.values()].filter(x => x.mau)) { await DB.del('cases', c.id); S.cases.delete(c.id); }
+  render(true); toast('Đã xóa dữ liệu mẫu');
+}
+
+/* ================= Sự kiện ================= */
+let pickTarget = null; // 'draft' hoặc { caseId }
+async function startAdd(mode, caseId) {
+  closeOverlay();
+  if (S.draft && cur().v === 'edit' && mode !== 'manual') { (mode === 'cam' ? $('#fCam') : $('#fPick')).click(); return; }
+  S.draft = newDraft({ caseId: caseId || '' }); S.ocr = null;
+  if (caseId) { const c = S.cases.get(caseId); const bh = tachBiHai(c?.biHai); if (bh.length === 1) S.draft.biHai = bh[0]; }
+  go({ v: 'edit' });
+  if (mode === 'cam') $('#fCam').click(); else if (mode === 'pick') $('#fPick').click();
+}
+async function onFiles(files) {
+  if (!files?.length || !S.draft) return;
+  const d = S.draft;
+  setOcr({ busy: true, msg: 'Đang xử lý ảnh…', pct: 0 });
+  const added = [];
+  for (const f of files) { try { const p = await processImage(f); d.pages.push(p); added.push(p); } catch (e) { toast('Có ảnh không đọc được, đã bỏ qua'); } }
+  S.ocr = null; render(false);
+  if (added.length) runOcr(added);
+}
+['fCam', 'fPick'].forEach(id => $('#' + id).addEventListener('change', e => { const fs = [...e.target.files]; e.target.value = ''; onFiles(fs); }));
+$('#fRestore').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) doRestore(f); });
+
+document.addEventListener('input', onField);
+document.addEventListener('change', e => { if (e.target.dataset.f || e.target.dataset.nc) onField(e); });
+function onField(e) {
+  const t = e.target;
+  if (t.id === 'qCases') { S.q.cases = t.value; $('#caseList').innerHTML = caseListHtml(); return; }
+  if (t.id === 'qSearch') { S.q.search = t.value; $('#searchRes').innerHTML = searchHtml(); hydrate(); return; }
+  if (t.dataset.f && S.draft) {
+    const k = t.dataset.f; S.draft[k] = t.value;
+    if (S.draft.auto[k]) { delete S.draft.auto[k]; $('#f_' + k)?.classList.remove('is-auto'); const a = $('#f_' + k + ' .auto'); if (a) a.remove(); }
+    if (k === 'caseId' && t.value !== S.draft._lastCase) { S.draft._lastCase = t.value; const c = S.cases.get(t.value); if (c && !S.draft.biHai) { const bh = tachBiHai(c.biHai); if (bh.length === 1) S.draft.biHai = bh[0]; } render(false); }
+    return;
+  }
+  if (t.dataset.nc && S.draft) { S.draft.newCase[t.dataset.nc] = t.value; }
+}
+document.addEventListener('submit', async e => {
+  if (e.target.id !== 'caseForm') return;
+  e.preventDefault();
+  const fd = new FormData(e.target); const id = e.target.dataset.id;
+  const ten = String(fd.get('ten') || '').trim();
+  if (!ten) { $('#caseErr').innerHTML = '<div class="err-msg">Nhập tên vụ án.</div>'; return; }
+  const old = id ? S.cases.get(id) : null;
+  const c = { ...(old || {}), id: id || uid(), ten, biHai: String(fd.get('biHai') || '').trim(), ghiChu: String(fd.get('ghiChu') || '').trim(), trangThai: fd.get('trangThai'), createdAt: old?.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+  await DB.put('cases', c); S.cases.set(c.id, c);
+  if (id) { back(); toast('Đã lưu vụ án'); } else { replace({ v: 'case', id: c.id }); toast('Đã tạo vụ án'); }
+});
+
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const a = el.dataset.act, id = el.dataset.id;
+  if (a === 'closeOverlay' && e.target !== el && !e.target.closest('button')) return;
+  switch (a) {
+    case 'tab': closeOverlay(); tab(el.dataset.v); break;
+    case 'back': back(); break;
+    case 'add': sheet(`<h3>Thêm văn bản</h3>
+        <button class="btn primary block" data-act="addMode" data-m="cam">${ICON.cam}Chụp văn bản</button>
+        <button class="btn block" data-act="addMode" data-m="pick">${ICON.img}Chọn ảnh có sẵn</button>
+        <button class="btn block" data-act="addMode" data-m="manual">${ICON.pen}Nhập tay không ảnh</button>`); break;
+    case 'addMode': startAdd(el.dataset.m, S.addCaseId || ''); S.addCaseId = null; break;
+    case 'addTo': S.addCaseId = id; sheet(`<h3>Thêm văn bản vào vụ</h3>
+        <button class="btn primary block" data-act="addMode" data-m="cam">${ICON.cam}Chụp văn bản</button>
+        <button class="btn block" data-act="addMode" data-m="pick">${ICON.img}Chọn ảnh có sẵn</button>
+        <button class="btn block" data-act="addMode" data-m="manual">${ICON.pen}Nhập tay không ảnh</button>`); break;
+    case 'closeOverlay': closeOverlay(); S.addCaseId = null; break;
+    case 'newCase': go({ v: 'caseForm' }); setTimeout(() => $('#c_ten')?.focus(), 50); break;
+    case 'editCase': go({ v: 'caseForm', id }); break;
+    case 'openCase': S.caseFilter = 'all'; go({ v: 'case', id }); break;
+    case 'openDoc': go({ v: 'doc', id }); break;
+    case 'toggleClosed': S.showClosed = !S.showClosed; $('#caseList').innerHTML = caseListHtml(); break;
+    case 'caseFilter': S.caseFilter = el.dataset.k; render(false); break;
+    case 'caseSort': S.caseSortAsc = !S.caseSortAsc; lsSet('svb.sortAsc', S.caseSortAsc); render(false); break;
+    case 'docFilter': S.docFilter = el.dataset.k; render(false); break;
+    case 'copyList': copyText(caseListText(id)); break;
+    case 'copyDoc': { const d = S.docs.get(id); const c = S.cases.get(d.caseId);
+      copyText([`Số, ký hiệu: ${d.so || ''}`, `Ngày: ${fmtDate(d.ngay)}`, `Cơ quan ban hành: ${d.coQuan || ''}`, `Trích yếu: ${d.trichYeu || ''}`, c ? `Vụ án: ${c.ten}` : '', d.biHai ? `Bị hại: ${d.biHai}` : ''].filter(Boolean).join('\n')); break; }
+    case 'copyOcr': copyText(S.docs.get(id).ocrText); break;
+    case 'editDoc': S.draft = await draftFromDoc(S.docs.get(id)); S.draft._lastCase = S.draft.caseId; S.ocr = null; go({ v: 'edit' }); break;
+    case 'askDelDoc': confirmSheet('Xóa văn bản này?', 'Xóa cả các trang ảnh đã chụp. Không hoàn tác được.', 'Xóa văn bản', 'delDoc', id); break;
+    case 'delDoc': await deleteDoc(id); closeOverlay(); back(); toast('Đã xóa văn bản'); break;
+    case 'askDelCase': confirmSheet('Xóa vụ án này?', 'Các văn bản của vụ vẫn giữ lại và chuyển về “Chưa gắn vụ án”.', 'Xóa vụ án', 'delCase', id); break;
+    case 'delCase': for (const d of docsOf(id)) { d.caseId = null; await DB.put('docs', d); }
+      await DB.del('cases', id); S.cases.delete(id); closeOverlay(); tab('cases'); toast('Đã xóa vụ án'); break;
+    case 'setLoai': S.draft.loai = el.dataset.k; render(false); break;
+    case 'cam': $('#fCam').click(); break;
+    case 'pick': $('#fPick').click(); break;
+    case 'rmPage': { const p = S.draft.pages.splice(+el.dataset.i, 1)[0]; if (p?.saved) S.draft.removed.push(p.id);
+      S.draft.ocrText = S.draft.pages.map(x => x.text).filter(Boolean).join('\n\n--- trang ---\n\n'); render(false); break; }
+    case 'pickBh': { const n = el.dataset.name; const cur = tachBiHai(S.draft.biHai); const i = cur.findIndex(x => chuanHoa(x) === chuanHoa(n));
+      if (i >= 0) cur.splice(i, 1); else cur.push(n); S.draft.biHai = cur.join('; '); delete S.draft.auto.biHai; render(false); break; }
+    case 'acceptSuggest': { S.draft.caseId = id; const c = S.cases.get(id); if (!S.draft.biHai) { const bh = tachBiHai(c.biHai); if (bh.length === 1) S.draft.biHai = bh[0]; } render(false); break; }
+    case 'saveDoc': saveDraft(); break;
+    case 'view': openViewer(id, +el.dataset.i); break;
+    case 'vPrev': openViewer(viewerState.docId, viewerState.i - 1); break;
+    case 'vNext': openViewer(viewerState.docId, viewerState.i + 1); break;
+    case 'vZoom': viewerState.z = viewerState.z === 1 ? 2 : viewerState.z === 2 ? 3 : 1; drawViewer(); break;
+    case 'vClose': if (viewerState?.url) URL.revokeObjectURL(viewerState.url); viewerState = null; closeOverlay(); break;
+    case 'backup': doBackup(); break;
+    case 'restore': $('#fRestore').click(); break;
+    case 'doRestore': applyRestore(); break;
+    case 'csv': doCsv(); break;
+    case 'persist': try { S.persisted = await navigator.storage.persist(); } catch (e) {} render(false); toast(S.persisted ? 'Đã bật lưu trữ bền vững' : 'iPhone chưa cho bật. Cài lên màn hình chính sẽ giữ dữ liệu ổn định hơn.', 3600); break;
+    case 'seed': await seed(); break;
+    case 'unseed': await unseed(); break;
+    case 'askWipe': confirmSheet('Xóa toàn bộ dữ liệu?', `Sẽ xóa ${S.cases.size} vụ án và ${S.docs.size} văn bản cùng toàn bộ ảnh trên máy này.`, 'Xóa toàn bộ', 'wipe'); break;
+    case 'wipe': for (const s of ['images', 'docs', 'cases']) await DB.clear(s); S.cases.clear(); S.docs.clear(); thumbCache.clear(); closeOverlay(); tab('cases'); toast('Đã xóa toàn bộ dữ liệu'); break;
+  }
+});
+
+/* ================= Khởi động ================= */
+(async function init() {
+  try { const l = document.createElement('link'); l.rel = 'stylesheet'; l.href = 'https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap'; document.head.appendChild(l); } catch (e) {}
+  await DB.open();
+  await loadAll();
+  render(true);
+  try { if (navigator.storage?.persisted) S.persisted = await navigator.storage.persisted(); } catch (e) {}
+  try { if (navigator.storage?.estimate) S.est = await navigator.storage.estimate(); } catch (e) {}
+  if (!IN_FRAME && 'serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,36 @@
+SỔ VĂN BẢN – HƯỚNG DẪN CÀI LÊN IPHONE
+Phiên bản 1.0.0 · 08/10/2026
+
+Ứng dụng là trang web cài lên màn hình chính (PWA). Mã nguồn được đưa lên một
+địa chỉ HTTPS miễn phí; DỮ LIỆU VỤ ÁN, VĂN BẢN, ẢNH CHỈ NẰM TRÊN IPHONE,
+không gửi lên địa chỉ đó hay bất kỳ máy chủ nào. Nhận dạng chữ chạy ngay trên máy.
+
+I. ĐƯA ỨNG DỤNG LÊN MẠNG (làm một lần, trên máy tính, khoảng 10 phút)
+Cách A – GitHub Pages
+ 1. Đăng nhập github.com (tạo tài khoản nếu chưa có).
+ 2. Bấm "New repository", đặt tên khó đoán, ví dụ: svb-7k2q. Chọn Public
+    (Pages miễn phí yêu cầu Public; chỉ chứa mã, không chứa dữ liệu). Bấm Create.
+ 3. Bấm "uploading an existing file", kéo TOÀN BỘ nội dung bên trong thư mục giải nén
+    (index.html, sw.js, manifest.webmanifest, .nojekyll, thư mục icons, thư mục ocr)
+    vào trang, bấm "Commit changes".
+    Lưu ý: tệp .nojekyll là tệp ẩn; trên Windows bật "Hidden items" để thấy và kéo vào.
+ 4. Vào Settings → Pages → Source: "Deploy from a branch" → Branch: main, thư mục /(root) → Save.
+ 5. Đợi 1–2 phút, địa chỉ có dạng: https://<tên tài khoản>.github.io/svb-7k2q/
+
+Cách B – Cloudflare Pages / Netlify: tạo dự án "upload trực tiếp", kéo thư mục vào là có địa chỉ HTTPS.
+
+II. CÀI LÊN IPHONE
+ 1. Mở địa chỉ trên bằng SAFARI (không dùng Zalo, Chrome).
+ 2. Bấm nút Chia sẻ → "Thêm vào MH chính" → Thêm.
+ 3. Mở từ biểu tượng "Sổ văn bản". Lần đầu, khi có mạng, chụp thử 1 văn bản để máy
+    tải bộ nhận dạng chữ tiếng Việt (~6 MB). Từ đó dùng được cả khi không có mạng.
+ 4. Vào mục Dữ liệu → "Yêu cầu bật" lưu trữ bền vững (nếu hiện).
+
+III. LƯU Ý BẮT BUỘC
+ - Xóa biểu tượng ứng dụng khỏi màn hình chính = XÓA TOÀN BỘ DỮ LIỆU.
+ - Sao lưu tối thiểu mỗi tuần: Dữ liệu → Xuất file sao lưu → lưu vào Tệp/máy tính.
+   Ứng dụng tự nhắc khi quá 7 ngày chưa sao lưu.
+ - File sao lưu chứa toàn bộ văn bản và ảnh dạng đọc được (không mã hóa):
+   bảo quản như tài liệu nội bộ, không gửi qua mạng xã hội.
+ - Đổi máy: sao lưu trên máy cũ → cài trên máy mới → Khôi phục từ file.
+ - Cập nhật phiên bản: thay tệp trên GitHub; iPhone tự nhận bản mới ở lần mở sau.
